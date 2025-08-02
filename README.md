@@ -1,6 +1,6 @@
 # 🦉 DuoLingo Clone
 
-A modern language-learning platform inspired by Duolingo, built with cutting-edge technologies to deliver a seamless user experience. This project replicates the core functionality of Duolingo with a focus on gamification, progress tracking, and interactive learning.
+A modern language-learning platform inspired by DUOLINGO, built with cutting-edge technologies to deliver a seamless user experience. This project replicates the core functionality of Duolingo with a focus on gamification, progress tracking, and interactive learning.
 
 ## 📋 Table of Contents
 
