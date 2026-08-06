@@ -71,8 +71,14 @@ export async function getAttemptStats(moduleNo:number){
   return {latest:rows?.[0]||null,best:rows?.length?Math.max(...rows.map((r:any)=>r.score)):null,attempts:rows?.length||0,everPassed:rows?.some((r:any)=>r.passed)||false};
 }
 
-export async function submitQuiz(moduleNo:number,answers:Record<string,string>):Promise<QuizResult>{
+export async function getQuizQuestionIds(moduleNo:number){
   const module=await resolveModule(moduleNo);
+  return authed(`/rest/v1/quiz_questions?module_id=eq.${module.id}&select=id,sort_order&order=sort_order.asc,id.asc`);
+}
+
+export async function submitQuiz(moduleNo:number,answersByNumber:Record<number,string>):Promise<QuizResult>{
+  const module=await resolveModule(moduleNo); const questionRows=await getQuizQuestionIds(moduleNo);
+  const answers:Record<string,string>={}; questionRows.forEach((q:any,index:number)=>{ answers[q.id]=answersByNumber[index+1]||""; });
   return authed(`/rest/v1/rpc/academy_submit_quiz_attempt`,{method:"POST",body:JSON.stringify({p_module_id:module.id,p_answers:answers})});
 }
 
