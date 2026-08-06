@@ -1,12 +1,105 @@
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, BookOpenCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpenCheck, ShieldCheck } from "lucide-react";
+
 import { AFIYAH_GIFT_MODULES } from "@/data/afiyah-gift-modules";
+import { AFIYAH_SOURCE_CURRICULUM, type AfiyahCurriculumWeek } from "@/data/afiyah-eight-source-curriculum";
 
-const lessonCopy = [
-  { title:"Learn", eyebrow:"Understand", body:"Start with the meaning of the pillar. Read slowly, connect it to one real decision in your life, and identify where the principle changes the way you would normally act.", prompt:"What is one idea here you want to remember tomorrow?" },
-  { title:"Apply", eyebrow:"Practice", body:"Knowledge becomes useful when it changes behaviour. Choose one small action that expresses this pillar this week. Keep it specific enough that you can actually complete it.", prompt:"What will you do, for whom, and by when?" },
-  { title:"Reflect", eyebrow:"Notice", body:"Think of a recent moment when this pillar was present, missing, or difficult. Reflection is not scored; it helps you notice patterns before the mastery quiz.", prompt:"What would you repeat or change next time?" },
-  { title:"Prepare for Mastery", eyebrow:"Review", body:"Review the key ideas from this week. The final assessment has 10 questions and requires 9 correct answers. If you do not pass, your best score remains and you can learn, retry and improve.", prompt:"Which idea still feels least clear? Revisit it before the quiz." },
-];
+function LessonBody({ body }: { body: string }) {
+  return (
+    <div className="mt-6 space-y-4">
+      {body.split("\n\n").map((block, index) => {
+        if (block.startsWith("### ")) {
+          return (
+            <h2 key={index} className="pt-3 font-serif text-2xl text-[#D6B46D]">
+              {block.replace(/^###\s+/, "")}
+            </h2>
+          );
+        }
 
-export default function LessonPage({params}:{params:{moduleId:string;lessonNo:string}}){const module=AFIYAH_GIFT_MODULES.find(m=>m.id===Number(params.moduleId))??AFIYAH_GIFT_MODULES[0]; const n=Math.min(4,Math.max(1,Number(params.lessonNo))); const lesson=lessonCopy[n-1]; return <main className="min-h-screen bg-[#061B26] px-4 py-8 text-[#F8F3E9]"><article className="mx-auto max-w-2xl"><Link href={`/afiyah-gift/module/${module.id}`} className="inline-flex items-center gap-2 text-sm text-[#D6B46D]"><ArrowLeft className="h-4 w-4"/>Module {module.id}</Link><div className="mt-8 text-xs font-bold uppercase tracking-[.25em] text-[#AD8633]">{lesson.eyebrow} · Lesson {n}/4</div><div className="mt-3 flex items-baseline gap-3"><span className="font-serif text-5xl text-[#D6B46D]">{module.pillarAr}</span><span className="font-serif text-2xl">{module.pillar} · {module.english}</span></div><h1 className="mt-7 font-serif text-5xl">{lesson.title}</h1><div className="mt-8 rounded-[32px] border border-white/10 bg-white/[.035] p-6 lg:p-8"><BookOpenCheck className="h-7 w-7 text-[#D6B46D]"/><p className="mt-5 text-lg leading-9 text-white/75">{lesson.body}</p><div className="mt-7 rounded-2xl border border-[#AD8633]/25 bg-[#003629]/60 p-5"><div className="text-[10px] font-bold uppercase tracking-[.2em] text-[#D6B46D]">Reflection</div><p className="mt-2 font-serif text-xl">{lesson.prompt}</p></div></div><div className="mt-6 flex items-center justify-between text-xs text-white/35"><span>Progress saves to your account when signed in.</span><span>{n}/4</span></div><Link href={n<4?`/afiyah-gift/module/${module.id}/lesson/${n+1}`:`/afiyah-gift/module/${module.id}/quiz`} className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-[#AD8633] px-5 py-4 text-xs font-bold uppercase tracking-[.18em] text-[#061B26]">{n<4?'Complete & continue':'Continue to quiz'}<ArrowRight className="h-4 w-4"/></Link><p className="mt-6 text-center text-[11px] leading-5 text-white/30">Prototype lesson shell. Production lesson wording should be populated from the approved Islamic University / Afiyah curriculum sources rather than generic filler.</p></article></main>}
+        const isInteraction = /^(Interaction:|Knowledge check:|Activity:|Prompt:|Boundary:|Outcome:)/.test(block);
+        return (
+          <p
+            key={index}
+            className={
+              isInteraction
+                ? "rounded-2xl border border-[#AD8633]/25 bg-[#003629]/60 p-4 text-sm leading-7 text-[#F8F3E9]/75"
+                : "text-base leading-8 text-[#F8F3E9]/72"
+            }
+          >
+            {block}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+export default function LessonPage({ params }: { params: { moduleId: string; lessonNo: string } }) {
+  const moduleNumber = Math.min(8, Math.max(1, Number(params.moduleId))) as AfiyahCurriculumWeek;
+  const lessonNumber = Math.min(4, Math.max(1, Number(params.lessonNo)));
+  const module = AFIYAH_GIFT_MODULES.find((item) => item.id === moduleNumber) ?? AFIYAH_GIFT_MODULES[0];
+  const curriculum = AFIYAH_SOURCE_CURRICULUM[moduleNumber];
+  const lesson = curriculum.lessons[lessonNumber - 1];
+
+  return (
+    <main className="min-h-screen bg-[#061B26] px-4 py-8 text-[#F8F3E9]">
+      <article className="mx-auto max-w-2xl">
+        <Link
+          href={`/afiyah-gift/module/${module.id}`}
+          className="inline-flex items-center gap-2 text-sm text-[#D6B46D]"
+        >
+          <ArrowLeft className="h-4 w-4" /> Module {module.id}
+        </Link>
+
+        <div className="mt-8 text-xs font-bold uppercase tracking-[.25em] text-[#AD8633]">
+          Source lesson · {lessonNumber}/4
+        </div>
+
+        <div className="mt-3 flex items-baseline gap-3">
+          <span className="font-serif text-5xl text-[#D6B46D]">{module.pillarAr}</span>
+          <span className="font-serif text-2xl">{module.pillar} · {module.english}</span>
+        </div>
+
+        <h1 className="mt-7 font-serif text-4xl leading-tight lg:text-5xl">{lesson.title}</h1>
+        <p className="mt-3 text-sm leading-6 text-white/45">{curriculum.sourceTitle}</p>
+
+        <div className="mt-8 rounded-[32px] border border-white/10 bg-white/[.035] p-6 lg:p-8">
+          <div className="flex items-center justify-between gap-4">
+            <BookOpenCheck className="h-7 w-7 text-[#D6B46D]" />
+            <div className="rounded-full border border-[#AD8633]/25 px-3 py-1 text-[10px] font-bold uppercase tracking-[.16em] text-[#D6B46D]">
+              Islamic.University
+            </div>
+          </div>
+          <LessonBody body={lesson.body} />
+        </div>
+
+        <div className="mt-5 flex gap-3 rounded-2xl border border-white/10 bg-black/15 p-4 text-xs leading-6 text-white/45">
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#D6B46D]" />
+          <span>
+            Source: {curriculum.sourceFile}. Afiyah applies a 9/10 mastery gate. Case-specific religious, legal, financial, or safeguarding questions still require qualified review.
+          </span>
+        </div>
+
+        <div className="mt-6 flex items-center justify-between text-xs text-white/35">
+          <span>Week {module.id} · Lesson {lessonNumber} of 4</span>
+          <span>{Math.round((lessonNumber / 4) * 100)}%</span>
+        </div>
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
+          <div className="h-full rounded-full bg-[#D6B46D]" style={{ width: `${(lessonNumber / 4) * 100}%` }} />
+        </div>
+
+        <Link
+          href={
+            lessonNumber < 4
+              ? `/afiyah-gift/module/${module.id}/lesson/${lessonNumber + 1}`
+              : `/afiyah-gift/module/${module.id}/quiz`
+          }
+          className="mt-5 flex items-center justify-center gap-2 rounded-2xl bg-[#AD8633] px-5 py-4 text-xs font-bold uppercase tracking-[.18em] text-[#061B26] transition hover:bg-[#D6B46D]"
+        >
+          {lessonNumber < 4 ? "Complete & continue" : "Continue to mastery quiz"}
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </article>
+    </main>
+  );
+}
