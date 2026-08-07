@@ -1,42 +1,17 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, CheckCircle2, CircleDashed, Infinity as InfinityIcon, Send, Users } from "lucide-react";
 import { AFIYAH_PILLARS } from "@/lib/afiyah-academy-types";
+import { getDashboardState, readSession, saveMyEightSlot } from "@/lib/afiyah-supabase-rest";
 
-const demo = [
-  { name: "Amina", progress: 100, week: 8, status: "multiplied" },
-  { name: "Maryam", progress: 76, week: 6, status: "learning" },
-  { name: "Sara", progress: 62, week: 5, status: "learning" },
-  { name: "Huda", progress: 50, week: 4, status: "learning" },
-  { name: "Layla", progress: 38, week: 3, status: "learning" },
-  { name: "Noor", progress: 25, week: 2, status: "joined" },
-  { name: "Fatima", progress: 12, week: 1, status: "joined" },
-  { name: "Invite", progress: 0, week: 1, status: "invited" },
-];
-
-export default function MyEightPage() {
-  return <main className="min-h-screen bg-[#061B26] px-4 py-8 text-[#F8F3E9]">
-    <div className="mx-auto max-w-5xl">
-      <Link href="/afiyah-gift" className="inline-flex items-center gap-2 text-sm text-[#D6B46D]"><ArrowLeft className="h-4 w-4"/>Academy</Link>
-      <section className="mt-5 overflow-hidden rounded-[32px] border border-[#AD8633]/30 bg-[radial-gradient(circle_at_top,#0c4a3a,#003629_45%,#061B26_100%)] p-6 lg:p-9">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div><div className="text-xs font-bold uppercase tracking-[.25em] text-[#D6B46D]">∞ × ∞ · Multiplication</div><h1 className="mt-3 font-serif text-5xl">My Eight</h1><p className="mt-3 max-w-2xl text-sm leading-7 text-white/60">Eight actual women. Eight different pillars. Their progress is theirs; this screen shows only the learning status they choose to share with your Circle.</p></div>
-          <div className="rounded-3xl border border-[#D6B46D]/25 bg-black/20 px-5 py-4"><div className="flex items-center gap-2 text-[#D6B46D]"><Users className="h-5 w-5"/><strong>7 / 8 joined</strong></div><div className="mt-2 text-xs text-white/45">1 chain multiplied · 5 actively learning</div></div>
-        </div>
-      </section>
-
-      <section className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {AFIYAH_PILLARS.map((pillar,i)=>{const member=demo[i]; return <article key={pillar.key} className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[.04] p-5">
-          <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full border border-[#AD8633]/15"/>
-          <div className="flex items-start justify-between"><div className="font-serif text-3xl text-[#D6B46D]">{pillar.ar}</div>{member.status==='multiplied'?<CheckCircle2 className="h-5 w-5 text-[#D6B46D]"/>:<CircleDashed className="h-5 w-5 text-white/25"/>}</div>
-          <div className="mt-1 font-serif text-xl">{pillar.label} <span className="text-xs text-white/40">· {pillar.english}</span></div>
-          <div className="mt-5 flex h-20 w-20 items-center justify-center rounded-full border-4 border-[#AD8633]/30 bg-black/20 font-serif text-xl">{member.progress}%</div>
-          <div className="mt-4 flex items-end justify-between"><div><div className="font-semibold">{member.name}</div><div className="text-xs text-white/40">Week {member.week} · {member.status}</div></div><span className="text-xs text-[#D6B46D]">{i+1}/8</span></div>
-          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-[#D6B46D]" style={{width:`${member.progress}%`}}/></div>
-          {member.status==='invited' && <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#AD8633] px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#061B26]"><Send className="h-4 w-4"/>Invite Sister</button>}
-        </article>})}
-      </section>
-
-      <section className="mt-6 rounded-3xl border border-[#5D234F]/60 bg-[#5D234F]/20 p-6"><div className="flex items-center gap-3"><InfinityIcon className="h-7 w-7 text-[#D6B46D]"/><div><div className="font-serif text-2xl">When all eight carry it forward</div><p className="mt-1 text-sm text-white/55">The chain becomes ∞ × ∞. Rewards they choose to GIVE flow into the shared Infinity Well; KEEP stays on their own dashboard.</p></div></div></section>
-    </div>
-  </main>;
+export default function MyEightPage(){
+  const [rows,setRows]=useState<any[]>([]); const [email,setEmail]=useState<Record<number,string>>({}); const [busy,setBusy]=useState<number|null>(null); const [message,setMessage]=useState(""); const [signedIn,setSignedIn]=useState(false);
+  async function load(){const s=readSession();setSignedIn(!!s);if(!s)return;try{const state=await getDashboardState();setRows(state.myEight||[])}catch(e:any){setMessage(e.message)}}
+  useEffect(()=>{load()},[]);
+  const bySlot=useMemo(()=>Object.fromEntries(rows.map(r=>[r.slot_number,r])),[rows]);
+  const joined=rows.filter(r=>r.status!=="invited").length; const multiplied=rows.filter(r=>r.status==="multiplied").length;
+  async function invite(slot:number,pillar:string){if(!signedIn){location.href="/afiyah-gift/account";return}const value=(email[slot]||"").trim();if(!value)return;setBusy(slot);setMessage("");try{await saveMyEightSlot(slot,pillar,value);setMessage(`Invitation slot ${slot} saved for ${value}.`);await load()}catch(e:any){setMessage(e.message)}finally{setBusy(null)}}
+  return <main className="min-h-screen bg-[#061B26] px-4 py-8 text-[#F8F3E9]"><div className="mx-auto max-w-5xl"><Link href="/afiyah-gift" className="inline-flex items-center gap-2 text-sm text-[#D6B46D]"><ArrowLeft className="h-4 w-4"/>Academy</Link><section className="mt-5 overflow-hidden rounded-[32px] border border-[#AD8633]/30 bg-[radial-gradient(circle_at_top,#0c4a3a,#003629_45%,#061B26_100%)] p-6 lg:p-9"><div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"><div><div className="text-xs font-bold uppercase tracking-[.25em] text-[#D6B46D]">∞ × ∞ · Multiplication</div><h1 className="mt-3 font-serif text-5xl">My Eight</h1><p className="mt-3 max-w-2xl text-sm leading-7 text-white/60">Your eight positions are stored in Supabase. This screen shows only Circle learning status—not private reflections, quiz answers, journals or wellbeing data.</p></div><div className="rounded-3xl border border-[#D6B46D]/25 bg-black/20 px-5 py-4"><div className="flex items-center gap-2 text-[#D6B46D]"><Users className="h-5 w-5"/><strong>{rows.length} / 8 invited</strong></div><div className="mt-2 text-xs text-white/45">{joined} joined · {multiplied} multiplied</div></div></div></section>{!signedIn&&<Link href="/afiyah-gift/account" className="mt-5 block rounded-2xl border border-[#D6B46D]/30 bg-[#AD8633]/10 p-4 text-center text-sm text-[#D6B46D]">Sign in to build and sync your Eight</Link>}<section className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">{AFIYAH_PILLARS.map((pillar,i)=>{const slot=i+1;const member=bySlot[slot];const progress=member?.progress_percent??0;const status=member?.status??"empty";return <article key={pillar.key} className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[.04] p-5"><div className="absolute -right-6 -top-6 h-24 w-24 rounded-full border border-[#AD8633]/15"/><div className="flex items-start justify-between"><div className="font-serif text-3xl text-[#D6B46D]">{pillar.ar}</div>{status==="multiplied"?<CheckCircle2 className="h-5 w-5 text-[#D6B46D]"/>:<CircleDashed className="h-5 w-5 text-white/25"/>}</div><div className="mt-1 font-serif text-xl">{pillar.label} <span className="text-xs text-white/40">· {pillar.english}</span></div><div className="mt-5 flex h-20 w-20 items-center justify-center rounded-full border-4 border-[#AD8633]/30 bg-black/20 font-serif text-xl">{progress}%</div><div className="mt-4 flex items-end justify-between"><div><div className="max-w-[150px] truncate font-semibold">{member?.invite_email||"Open circle"}</div><div className="text-xs text-white/40">Week {member?.current_week??1} · {status}</div></div><span className="text-xs text-[#D6B46D]">{slot}/8</span></div><div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-[#D6B46D]" style={{width:`${progress}%`}}/></div>{!member&&<div className="mt-4"><input type="email" value={email[slot]||""} onChange={e=>setEmail(c=>({...c,[slot]:e.target.value}))} placeholder="sister@email.com" className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs outline-none focus:border-[#AD8633]"/><button disabled={busy===slot} onClick={()=>invite(slot,pillar.key)} className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#AD8633] px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#061B26] disabled:opacity-50"><Send className="h-4 w-4"/>{busy===slot?"Saving…":"Invite Sister"}</button></div>}</article>})}</section>{message&&<p className="mt-5 rounded-2xl border border-white/10 bg-black/15 p-4 text-center text-xs text-white/65">{message}</p>}<section className="mt-6 rounded-3xl border border-[#5D234F]/60 bg-[#5D234F]/20 p-6"><div className="flex items-center gap-3"><InfinityIcon className="h-7 w-7 text-[#D6B46D]"/><div><div className="font-serif text-2xl">When all eight carry it forward</div><p className="mt-1 text-sm text-white/55">The chain becomes ∞ × ∞. Rewards they choose to GIVE flow into the Infinity Well; KEEP remains on each woman’s own dashboard.</p></div></div></section></div></main>;
 }
