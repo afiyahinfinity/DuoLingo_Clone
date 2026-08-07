@@ -29,6 +29,7 @@
     "lucide-react": "^0.408.0",
     "next": "14.2.35",
     "next-themes": "^0.3.0",
+    "nodemailer": "^6.9.16",
     "pg": "^8.12.0",
     "ra-data-simple-rest": "^5.1.2",
     "react": "^18.2.0",
@@ -45,6 +46,7 @@
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/nodemailer": "^6.4.16",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "drizzle-kit": "^0.23.0",
