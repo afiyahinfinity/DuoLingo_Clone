@@ -35,7 +35,10 @@ export async function getAcademyAccess(): Promise<AcademyAccess> {
 
   const rows = (await response.json()) as Array<{ role: string }>;
   const roles = rows.map((row) => row.role);
-  const qaBypass = roles.includes("admin") || roles.includes("super_admin");
+
+  // `qa` is intentionally narrower than admin. It opens Academy progression
+  // for internal testing only; all private learner rows remain protected by RLS.
+  const qaBypass = roles.includes("qa") || roles.includes("admin") || roles.includes("super_admin");
 
   return {
     roles,
